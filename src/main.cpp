@@ -48,6 +48,14 @@ int main(int argc, char** argv) {
                         case SDL_SCANCODE_BACKSPACE:
                             input.append("\b");
                             break;
+                        case SDL_SCANCODE_TAB:
+                            input.append("\t");
+                            break;
+                        case SDL_SCANCODE_C:
+                            if (e.key.keysym.mod == KMOD_LCTRL || e.key.keysym.mod == KMOD_RCTRL) {
+                                input.append("\03");
+                            }
+                            break;
                         default:
                             break;
                     }

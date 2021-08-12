@@ -14,7 +14,7 @@ static constexpr SDL_Color TEXT_COLOR{0xFF, 0xFF, 0xFF};
 static constexpr SDL_Color BG_COLOR{0x00, 0x00, 0x00};
 /// Go monospaced font
 static constexpr std::string_view FONT_PATH = "../Go-Mono.ttf";
-static constexpr int FONT_SIZE_PT = 16;
+static constexpr int FONT_SIZE_PT = 8;
 
 namespace ccterm::render {
 Renderer::Renderer()
@@ -37,7 +37,6 @@ Renderer::Renderer()
     }
 
     // Create window
-    // TODO: Determine size dynamically
     const int width = 640;
     const int height = 480;
     m_window = SDL_CreateWindow("ccterm", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height,
@@ -77,7 +76,10 @@ void Renderer::redraw() {
     // Render text to surface
     int window_width;
     SDL_GetWindowSize(m_window, &window_width, NULL);
-    SDL_Surface* text_surf = TTF_RenderText_Blended_Wrapped(m_font, m_contents.c_str(), m_text_color, window_width);
+    // With cursor
+    std::string text{m_contents};
+    text.append("|");
+    SDL_Surface* text_surf = TTF_RenderText_Blended_Wrapped(m_font, text.c_str(), m_text_color, window_width);
     if (text_surf == nullptr) {
         throw std::runtime_error{
             fmt::format("Renderer::redraw(): Failed to initialize SDL2_TTF surface: {}", TTF_GetError())};

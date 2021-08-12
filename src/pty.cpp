@@ -13,6 +13,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 namespace ccterm::pty {
 static int get_master_pty() {
@@ -79,8 +80,28 @@ PseudoTerm::PseudoTerm() : m_master_fd(get_master_pty()), m_slave_fd(get_slave_p
         dup2(m_slave_fd, 2);
         close(m_slave_fd);
 
+        // Tell the shell we're a very dumb terminal.
+        // To do that, we have to modify environ, which is a somewhat tricky pointer-to-pointers data structure.
+        std::vector<const char*> env_var_ptrs{};
+        std::size_t i = 0;
+        char* curr = environ[i];
+        while (curr != NULL) {
+            if (!std::string_view(curr).starts_with("TERM=")) {
+                env_var_ptrs.push_back(curr);
+            }
+            i++;
+            curr = environ[i];
+        }
+        std::string term{"TERM=dumb"};
+        env_var_ptrs.push_back(term.c_str());
+        env_var_ptrs.push_back(NULL);  // Last entry must be NULL
+
         // Finally, become the shell process
-        execle("/bin/sh", "/bin/sh", NULL, environ);
+        const int exec_err = execle("/bin/sh", "/bin/sh", NULL, env_var_ptrs.data());
+        if (exec_err == -1) {
+            throw std::runtime_error{
+                fmt::format("PseudoTerm::PseudoTerm(): Failed to exec() the shell: {}", strerror(errno))};
+        }
     }
     if (pid > 0) {
         fmt::print("PseudoTerm::PseudoTerm(): Initialization complete\n");
