@@ -62,7 +62,15 @@ int main(int argc, char** argv) {
                     break;
                 case SDL_WINDOWEVENT:
                     renderer.redraw();
-
+                    break;
+                case SDL_MOUSEWHEEL:
+                    if (e.wheel.y > 0) {
+                        renderer.scroll_up();
+                    }
+                    if (e.wheel.y < 0) {
+                        renderer.scroll_down();
+                    }
+                    break;
                 default:
                     continue;
             }
